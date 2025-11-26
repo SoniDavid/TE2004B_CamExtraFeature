@@ -1,31 +1,32 @@
 """
-Camera Processing Module for ESP32-CAM
-========================================
+Camera Processing Module
+=========================
 
-This package provides modules for retrieving and processing camera frames
-from ESP32-CAM devices.
+This package provides modules for processing camera frames and ArUco marker detection
+for DroidCam or other camera sources.
 
 Modules:
-    - esp_camera_client: HTTP client for ESP32-CAM communication
-    - frame_processor: Image processing pipeline and filters
+    - image_filters: Image processing pipeline and filters
+    - aruco_detector: ArUco marker detection and depth estimation
 
 Example usage:
-    from camera_processing import ESPCameraClient, FrameProcessor, ProcessingMode
+    import cv2
+    from camera_processing import FrameProcessor, ProcessingMode, ArucoDetector
 
-    # Connect to ESP32-CAM
-    client = ESPCameraClient("192.168.1.100")
-    client.connect()
-
-    # Create processor
+    # Open camera stream
+    cap = cv2.VideoCapture("http://10.22.209.148:4747/video")
+    
+    # Create processor and ArUco detector
     processor = FrameProcessor()
-    processor.add_processing_step(convert_to_grayscale)
-
+    aruco = ArucoDetector()
+    
     # Get and process frame
-    frame = client.get_frame()
-    processed = processor.process(frame)
+    ret, frame = cap.read()
+    processed = processor.process(frame, ProcessingMode.EDGE_DETECTION)
+    markers = aruco.detect(frame)
 """
 
-from .frame_processor import (
+from .image_filters import (
     FrameProcessor,
     ProcessingMode,
     create_processor,
@@ -50,7 +51,7 @@ from .aruco_detector import (
 
 __version__ = "2.0.0"
 __all__ = [
-    # Frame processing
+    # Image filters
     "FrameProcessor",
     "ProcessingMode",
     "create_processor",

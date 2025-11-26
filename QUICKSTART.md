@@ -7,10 +7,10 @@
 python3 utils/generate_aruco_markers.py
 
 # Run main viewer with ArUco detection
-python3 viewer/camera_viewer_aruco.py
+python3 viewer/aruco_viewer.py
 
 # Run simple viewer (no ArUco)
-python3 viewer/simple_opencv_viewer.py
+python3 viewer/camera_viewer.py
 ```
 
 ## ⌨️ Keyboard Controls
@@ -28,10 +28,10 @@ python3 viewer/simple_opencv_viewer.py
 
 ## 📝 Configuration
 
-Edit `viewer/camera_viewer_aruco.py`:
+Edit `viewer/aruco_viewer.py`:
 
 ```python
-CAMERA_URL = "http://10.22.209.148:4747/video"  # Your camera
+CAMERA_URL = "http://10.22.209.148:4747/video"  # Your DroidCam IP
 MARKER_SIZE_CM = 10.0   # Measured marker size in cm
 FOCAL_LENGTH_PX = 1000.0  # Adjust for accuracy
 ```
@@ -39,7 +39,8 @@ FOCAL_LENGTH_PX = 1000.0  # Adjust for accuracy
 ## 📁 File Locations
 
 ```
-viewer/camera_viewer_aruco.py   ← Main application
+viewer/aruco_viewer.py          ← Main application with ArUco
+viewer/camera_viewer.py         ← Simple camera viewer
 utils/generate_aruco_markers.py ← Generate markers
 aruco_markers/                  ← Generated markers
 camera_processing/              ← Core modules
@@ -50,8 +51,8 @@ camera_processing/              ← Core modules
 1. Generate markers: `python3 utils/generate_aruco_markers.py`
 2. Print `aruco_markers/marker_sheet_0.png`
 3. Measure printed marker size in cm
-4. Update `MARKER_SIZE_CM` in `viewer/camera_viewer_aruco.py`
-5. Run: `python3 viewer/camera_viewer_aruco.py`
+4. Update `MARKER_SIZE_CM` in `viewer/aruco_viewer.py`
+5. Run: `python3 viewer/aruco_viewer.py`
 6. Point camera at printed marker
 7. See distance in real-time!
 

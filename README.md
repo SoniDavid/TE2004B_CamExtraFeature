@@ -13,7 +13,7 @@ This will generate printable ArUco markers in the `aruco_markers/` directory.
 
 ### 2. Run Camera Viewer with ArUco Detection
 ```bash
-python3 viewer/camera_viewer_aruco.py
+python3 viewer/aruco_viewer.py
 ```
 
 **Keyboard Controls:**
@@ -33,34 +33,29 @@ espCamFeature/
 ├── camera_processing/          # Core processing modules
 │   ├── __init__.py
 │   ├── aruco_detector.py       # ArUco marker detection & depth estimation
-│   ├── frame_processor.py      # Image processing filters
-│   └── esp_camera_client.py    # Camera stream client (legacy)
+│   └── image_filters.py        # Image processing filters
 │
 ├── viewer/                     # Viewer applications
-│   ├── camera_viewer_aruco.py  # ✨ Main viewer with ArUco detection
-│   ├── simple_opencv_viewer.py # Simple OpenCV viewer
-│   ├── simple_camera_viewer.py # Custom MJPEG viewer
-│   └── simple_capture_example.py
+│   ├── aruco_viewer.py         # ✨ Main viewer with ArUco detection
+│   └── camera_viewer.py        # Simple camera viewer
 │
 ├── utils/                      # Utility scripts
 │   └── generate_aruco_markers.py # Generate printable ArUco markers
 │
 ├── tests/                      # Test & diagnostic scripts
-│   ├── diagnose_camera.py
-│   ├── test_esp_connection.py
-│   └── find_camera_url.py
+│   └── diagnose_camera.py
 │
 ├── docs/                       # Documentation
 │   ├── SETUP_GUIDE.md
 │   ├── CURRENT_STATUS.md
+│   ├── PROJECT_REORGANIZATION.md
 │   └── README_SOLUTION.md
 │
 ├── cam_server_page/            # Streamlit web app (optional)
 │   ├── app_opencv.py
 │   └── app.py
 │
-├── CameraWebServer/            # ESP32-CAM Arduino code (optional)
-│   └── CameraWebServer.ino
+├── aruco_markers/              # Generated ArUco markers
 │
 └── requirements.txt
 ```
@@ -74,7 +69,7 @@ espCamFeature/
 - Marker ID display
 - Camera pose estimation (with calibration)
 
-### Image Processing
+### Image Processing Filters
 - Grayscale conversion
 - Edge detection (Canny)
 - Gaussian blur
@@ -85,8 +80,8 @@ espCamFeature/
 ### Camera Support
 - DroidCam (Android/iOS camera apps)
 - IP Webcam
-- ESP32-CAM (future support)
 - Any MJPEG/HTTP video stream
+- Built-in webcams
 
 ## 📝 Setup
 
@@ -101,7 +96,7 @@ Required packages:
 
 ### 2. Configure Camera URL
 
-Edit `viewer/camera_viewer_aruco.py`:
+Edit `viewer/aruco_viewer.py`:
 ```python
 CAMERA_URL = "http://YOUR_CAMERA_IP:PORT/video"
 MARKER_SIZE_CM = 10.0  # Real size of your printed marker
@@ -211,7 +206,7 @@ corners, ids, _ = detector.detect(processed_frame)
 ### Camera URL Examples:
 - **DroidCam**: `http://10.22.209.148:4747/video`
 - **IP Webcam**: `http://192.168.1.100:8080/video`
-- **ESP32-CAM**: `http://192.168.1.100/stream`
+- **Built-in webcam**: Use `0` or `1` as device index
 
 ### ArUco Dictionary Types:
 - `DICT_4X4_50` - Good for small markers, fewer IDs

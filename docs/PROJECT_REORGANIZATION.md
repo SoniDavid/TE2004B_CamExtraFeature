@@ -9,7 +9,7 @@ All `.py` files removed from root directory and organized into logical folders:
 espCamFeature/
 ├── camera_processing/      # Core modules (no changes needed here)
 │   ├── aruco_detector.py   # ✨ NEW - ArUco detection & depth estimation
-│   ├── frame_processor.py  # Image processing
+│   ├── image_filters.py    # Image processing
 │   └── esp_camera_client.py # (kept for compatibility, not used)
 │
 ├── viewer/                 # 📁 NEW FOLDER
@@ -273,7 +273,7 @@ distance_3d = np.linalg.norm(tvec)
 
 ### Core Module (camera_processing/)
 - `aruco_detector.py` - ArUco detection class
-- `frame_processor.py` - Image processing
+- `image_filters.py` - Image processing
 - `__init__.py` - Exports (updated)
 
 ### Viewer Scripts (viewer/)

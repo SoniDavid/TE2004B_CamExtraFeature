@@ -22,12 +22,12 @@ class ProcessingMode(Enum):
 
 class FrameProcessor:
     """
-    Frame processing pipeline for ESP32-CAM images.
-    Supports multiple processing operations and custom filters.
+    Image filter processing pipeline for camera frames.
+    Supports multiple image filters and custom processing operations.
     """
 
     def __init__(self):
-        """Initialize frame processor."""
+        """Initialize image filter processor."""
         self.processing_pipeline: List[Callable] = []
         self.enabled = True
 
@@ -278,7 +278,7 @@ def create_processor(mode: ProcessingMode = ProcessingMode.ORIGINAL,
 
 if __name__ == "__main__":
     # Example usage
-    print("Frame Processor Module")
-    print("Available processing modes:")
+    print("Image Filters Module")
+    print("Available image filter modes:")
     for mode in ProcessingMode:
         print(f"  - {mode.value}")

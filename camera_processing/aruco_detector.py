@@ -54,7 +54,7 @@ class ArucoDetector:
         focal_length_px: float = 1000.0
     ):
         """
-        Initialize ArUco detector.
+        Initialize ArUco detector with optimized parameters.
         
         Args:
             aruco_dict_type: Type of ArUco dictionary to use
@@ -68,7 +68,18 @@ class ArucoDetector:
         
         self.aruco_dict_type = aruco_dict_type
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(self.ARUCO_DICT[aruco_dict_type])
+        
+        # Configure detection parameters for better detection
         self.aruco_params = cv2.aruco.DetectorParameters()
+        self.aruco_params.adaptiveThreshWinSizeMin = 3
+        self.aruco_params.adaptiveThreshWinSizeMax = 23
+        self.aruco_params.adaptiveThreshWinSizeStep = 10
+        self.aruco_params.minMarkerPerimeterRate = 0.03
+        self.aruco_params.maxMarkerPerimeterRate = 4.0
+        self.aruco_params.polygonalApproxAccuracyRate = 0.05
+        self.aruco_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        self.aruco_params.cornerRefinementWinSize = 5
+        
         self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
         
         self.marker_size_cm = marker_size_cm
@@ -267,38 +278,51 @@ class ArucoDetector:
         return markers_info
 
 
-def generate_aruco_marker(marker_id: int, marker_size: int = 200, aruco_dict_type: str = "DICT_6X6_250") -> np.ndarray:
+def generate_aruco_marker(marker_id: int, marker_size: int = 200, aruco_dict_type: str = "DICT_6X6_250", border_bits: int = 1) -> np.ndarray:
     """
-    Generate an ArUco marker image.
+    Generate an ArUco marker image with white border.
     
     Args:
         marker_id: ID of the marker to generate
-        marker_size: Size of the marker in pixels
+        marker_size: Size of the marker in pixels (including border)
         aruco_dict_type: Type of ArUco dictionary
+        border_bits: Number of white border bits (default=1, recommended for detection)
     
     Returns:
-        Generated marker image
+        Generated marker image with white border
     """
     if aruco_dict_type not in ArucoDetector.ARUCO_DICT:
         raise ValueError(f"Invalid ArUco dictionary type: {aruco_dict_type}")
     
     aruco_dict = cv2.aruco.getPredefinedDictionary(ArucoDetector.ARUCO_DICT[aruco_dict_type])
-    marker_image = cv2.aruco.generateImageMarker(aruco_dict, marker_id, marker_size)
     
-    return marker_image
+    # Generate marker without border first
+    marker_image = cv2.aruco.generateImageMarker(aruco_dict, marker_id, marker_size, borderBits=border_bits)
+    
+    # Add extra white padding for better detection
+    padding = max(20, marker_size // 10)
+    marker_with_padding = cv2.copyMakeBorder(
+        marker_image,
+        padding, padding, padding, padding,
+        cv2.BORDER_CONSTANT,
+        value=255
+    )
+    
+    return marker_with_padding
 
 
-def save_aruco_marker(marker_id: int, filename: str, marker_size: int = 200, aruco_dict_type: str = "DICT_6X6_250"):
+def save_aruco_marker(marker_id: int, filename: str, marker_size: int = 200, aruco_dict_type: str = "DICT_6X6_250", border_bits: int = 1):
     """
-    Generate and save an ArUco marker to a file.
+    Generate and save an ArUco marker to a file with proper borders.
     
     Args:
         marker_id: ID of the marker to generate
         filename: Output filename (e.g., "marker_0.png")
-        marker_size: Size of the marker in pixels
+        marker_size: Size of the marker in pixels (core marker, padding added automatically)
         aruco_dict_type: Type of ArUco dictionary
+        border_bits: Number of white border bits (default=1)
     """
-    marker = generate_aruco_marker(marker_id, marker_size, aruco_dict_type)
+    marker = generate_aruco_marker(marker_id, marker_size, aruco_dict_type, border_bits)
     cv2.imwrite(filename, marker)
     logger.info(f"Saved ArUco marker ID {marker_id} to {filename}")
 
