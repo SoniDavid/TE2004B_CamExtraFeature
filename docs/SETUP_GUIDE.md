@@ -1,64 +1,54 @@
-# ESP32-CAM Integration Guide
+# Camera Setup Guide
 
-This guide explains how to set up and use the ESP32-CAM with Python processing and Streamlit visualization.
+This guide explains how to set up and use DroidCam or other camera sources with Python processing and ArUco marker detection.
 
 ## Architecture Overview
 
 ```
 ┌─────────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│   ESP32-CAM     │ HTTP │  camera_processing│      │  cam_server_page│
-│  (Arduino .ino) │─────>│   (Python)        │─────>│   (Streamlit)   │
+│   DroidCam      │ HTTP │  camera_processing│      │  viewer apps    │
+│  (Phone Camera) │─────>│   (Python)        │─────>│   (OpenCV)      │
 │                 │      │                   │      │                 │
-│ • Captures video│      │ • Fetches frames  │      │ • Web interface │
-│ • WiFi server   │      │ • Processes images│      │ • Live display  │
-│ • /stream       │      │ • Applies filters │      │ • Controls      │
-│ • /capture      │      │                   │      │                 │
+│ • Captures video│      │ • Fetches frames  │      │ • Live display  │
+│ • WiFi stream   │      │ • ArUco detection │      │ • ArUco overlay │
+│ • /video        │      │ • Processes images│      │ • Depth info    │
+│                 │      │ • Depth estimation│      │                 │
 └─────────────────┘      └──────────────────┘      └─────────────────┘
 ```
 
 ## Setup Steps
 
-### 1. Prepare ESP32-CAM Hardware
+### 1. Setup Camera Source (DroidCam)
 
-1. **Upload Arduino Code:**
-   - Open Arduino IDE
-   - Install ESP32 board support (if not already installed)
-   - Open `CameraWebServer/CameraWebServer.ino`
-   
-2. **Configure WiFi:**
-   Edit these lines in the .ino file with your WiFi credentials:
-   ```cpp
-   const char *ssid = "YOUR_WIFI_NAME";
-   const char *password = "YOUR_WIFI_PASSWORD";
-   ```
+1. **Install DroidCam on your phone:**
+   - Android: Install from Google Play Store
+   - iOS: Install from App Store
 
-3. **Upload to ESP32-CAM:**
-   - Select the correct board (e.g., AI Thinker ESP32-CAM)
-   - Select the correct port
-   - Upload the code
+2. **Connect to WiFi:**
+   - Ensure your phone and computer are on the **same WiFi network**
 
-4. **Get ESP32-CAM IP Address:**
-   - Open Serial Monitor (115200 baud)
-   - Wait for "WiFi connected"
-   - Note the IP address printed, e.g.:
-     ```
-     Camera Ready! Use 'http://192.168.1.100' to connect
-     ```
-   - **This is NOT localhost** - it's the ESP's IP on your local network
+3. **Start DroidCam:**
+   - Open DroidCam app on your phone
+   - Note the WiFi IP address shown, e.g.: `http://10.22.209.148:4747`
 
-### 2. Test ESP32-CAM Connection
+4. **Test Connection:**
+   - Open the IP address in your browser
+   - You should see a web interface with video controls
+   - The video stream URL will be: `http://YOUR_IP:4747/video`
 
-Run the test script to verify everything is working:
+### 2. Test Camera Connection
+
+Run the diagnostic script to verify everything is working:
 
 ```bash
-python test_esp_connection.py
+python3 tests/diagnose_camera.py
 ```
 
 This will:
 - Check Python imports
-- Test connection to your ESP32-CAM
+- Test connection to your camera
 - Capture a test frame
-- Verify processing works
+- Verify OpenCV can read the stream
 
 ### 3. Install Python Dependencies
 
@@ -77,118 +67,116 @@ Required packages:
 
 Test frame capture and processing:
 
-```bash
-python simple_capture_example.py
-```
+### 4. Generate ArUco Markers
 
-This will:
-- Connect to ESP32-CAM
-- Capture one frame
-- Process it with edge detection
-- Save original and processed images to `output/` folder
-
-### 5. Run Streamlit App
-
-Start the web interface:
+Create printable markers for detection:
 
 ```bash
-cd cam_server_page
-streamlit run app.py
+python3 utils/generate_aruco_markers.py
 ```
 
-Then:
-1. Open the URL shown (typically http://localhost:8501)
-2. Enter your ESP32-CAM IP address in the sidebar
-3. Select processing mode
-4. Adjust parameters
-5. View the live processed stream!
+This will generate markers in the `aruco_markers/` folder.
+
+### 5. Run Camera Viewers
+
+**Simple viewer (no ArUco):**
+```bash
+python3 viewer/camera_viewer.py
+```
+
+**ArUco detection viewer:**
+```bash
+python3 viewer/aruco_viewer.py
+```
+
+Update the camera URL in the viewer files before running:
+```python
+CAMERA_URL = "http://YOUR_IP:4747/video"
+```
 
 ## Project Structure
 
 ```
 espCamFeature/
-├── CameraWebServer/          # Arduino ESP32-CAM code
-│   ├── CameraWebServer.ino   # Main Arduino sketch
-│   ├── app_httpd.cpp         # HTTP server implementation
-│   ├── camera_index.h        # Web interface HTML
-│   └── ...
-│
 ├── camera_processing/        # Python processing module
 │   ├── __init__.py           # Module exports
-│   ├── esp_camera_client.py # ESP32-CAM HTTP client
-│   └── frame_processor.py    # Image processing pipeline
+│   ├── aruco_detector.py     # ArUco marker detection & depth
+│   └── image_filters.py      # Image processing pipeline
 │
-├── cam_server_page/          # Streamlit web app
-│   ├── app.py                # Main Streamlit application
-│   └── README.md             # App documentation
+├── viewer/                   # Viewer applications
+│   ├── aruco_viewer.py       # ArUco detection viewer
+│   └── camera_viewer.py      # Simple camera viewer
 │
-├── test_esp_connection.py    # Connection test script
-├── simple_capture_example.py # Simple usage example
+├── utils/                    # Utility scripts
+│   └── generate_aruco_markers.py
+│
+├── tests/                    # Test scripts
+│   └── diagnose_camera.py
+│
+├── cam_server_page/          # Streamlit web app (optional)
+│   ├── app_opencv.py
+│   └── app.py
+│
+├── aruco_markers/            # Generated ArUco markers
 └── requirements.txt          # Python dependencies
 ```
 
 ## How It Works
 
-### 1. ESP32-CAM (Hardware)
+### 1. Camera Source (DroidCam)
 
-The ESP32-CAM runs Arduino code that:
-- Initializes the camera
-- Connects to your WiFi network
-- Starts an HTTP server on port 80
-- Provides endpoints:
-  - `/stream` - MJPEG video stream
-  - `/capture` - Single JPEG frame
+DroidCam on your phone:
+- Streams video over WiFi
+- Provides HTTP endpoint at `/video`
+- Works with OpenCV's VideoCapture
 
 ### 2. camera_processing (Python Module)
 
-**ESPCameraClient**: Connects to ESP32-CAM via HTTP
+**ArucoDetector**: Detects ArUco markers and estimates distance
 ```python
-from camera_processing import ESPCameraClient
+from camera_processing import ArucoDetector
+import cv2
 
-client = ESPCameraClient("192.168.1.100")
-client.connect()
-frame = client.get_frame()  # Returns numpy array (BGR)
+detector = ArucoDetector(marker_size_cm=10.0)
+cap = cv2.VideoCapture("http://10.22.209.148:4747/video")
+
+ret, frame = cap.read()
+corners, ids, rejected = detector.detect(frame)
+markers_info = detector.get_marker_info(corners, ids)
 ```
 
 **FrameProcessor**: Processes images with various filters
 ```python
 from camera_processing import FrameProcessor, ProcessingMode, create_processor
 
-# Method 1: Use predefined processor
+# Use predefined processor
 processor = create_processor(ProcessingMode.EDGE_DETECTION, threshold1=100, threshold2=200)
 processed = processor.process(frame)
 
-# Method 2: Build custom pipeline
+# Build custom pipeline
 processor = FrameProcessor()
 processor.add_processing_step(convert_to_grayscale)
 processor.add_processing_step(apply_blur)
 processed = processor.process(frame)
 ```
 
-### 3. cam_server_page (Streamlit App)
+### 3. Viewer Applications
 
-The Streamlit app provides:
-- Web interface for live streaming
-- Real-time processing controls
-- Multiple processing modes:
-  - Original
-  - Grayscale
-  - Edge Detection
-  - Blur
-  - Sharpen
-  - Brightness adjustment
-  - Contrast adjustment
-  - Threshold
+The viewers provide:
+- Live camera streaming with OpenCV
+- Real-time ArUco marker detection
+- Distance estimation overlay
+- Multiple processing modes (grayscale, edge detection, etc.)
 
 ## Troubleshooting
 
-### "Failed to connect to ESP32-CAM"
+### "Failed to connect to camera"
 
 **Check:**
-1. ESP32-CAM is powered on and running
-2. You're on the same WiFi network as the ESP32-CAM
-3. IP address is correct (check Serial Monitor)
-4. Try accessing `http://YOUR_ESP_IP` in a web browser
+1. DroidCam app is running on your phone
+2. Phone and computer are on the same WiFi network
+3. IP address is correct (check DroidCam app display)
+4. Try accessing the IP in a web browser
 5. Firewall isn't blocking the connection
 
 ### "Import error" in Python
@@ -202,10 +190,10 @@ cd /home/soni/reto_embebidos/espCamFeature
 pip install -r requirements.txt
 
 # Test imports
-python test_esp_connection.py
+python3 tests/diagnose_camera.py
 ```
 
-### "Camera init failed" on ESP32-CAM
+### "No markers detected"
 
 **Check:**
 1. Camera module is properly connected

@@ -57,7 +57,8 @@ def print_help():
 
 def main():
     # Configuration
-    CAMERA_URL = "http://10.22.209.148:4747/video"  # Change to your camera URL
+    CAMERA_URL = "http://10.22.227.47:4747/video"
+ # Change to your camera URL
     MARKER_SIZE_CM = 10.0  # Real-world size of your printed marker in cm
     ARUCO_DICT_TYPE = "DICT_6X6_250"
     FOCAL_LENGTH_PX = 1000.0  # Approximate focal length, adjust for better accuracy

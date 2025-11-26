@@ -49,7 +49,7 @@ espCamFeature/
 ├── camera_processing/              # Core Processing Module
 │   ├── __init__.py                 # Exports all functions
 │   ├── esp_camera_client.py        # HTTP camera client
-│   └── frame_processor.py          # Image processing filters
+│   └── image_filters.py            # Image processing filters
 │
 ├── cam_server_page/                # Web Interface
 │   ├── app.py                      # Original Streamlit app (uses custom client)
