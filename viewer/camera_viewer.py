@@ -1,37 +1,81 @@
 #!/usr/bin/env python3
 """
 Simple camera stream viewer using OpenCV's built-in VideoCapture.
+Loads configuration from config.yaml file.
 Press 'q' to quit.
 """
 
 import cv2
 import sys
+import os
+import yaml
+
+
+def load_config(config_path="config.yaml"):
+    """Load configuration from YAML file."""
+    # Get the parent directory (project root)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    config_file = os.path.join(parent_dir, config_path)
+    
+    if not os.path.exists(config_file):
+        print(f"Warning: Config file not found: {config_file}")
+        print("Using default configuration.")
+        return {
+            'camera': {'url': 'http://10.22.227.47:4747/video', 'buffer_size': 1},
+            'display': {'window_width': 1280, 'window_height': 720}
+        }
+    
+    try:
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+        print(f"✓ Loaded configuration from: {config_path}")
+        return config
+    except Exception as e:
+        print(f"✗ Error loading config file: {e}")
+        print("Using default configuration.")
+        return {
+            'camera': {'url': 'http://10.22.227.47:4747/video', 'buffer_size': 1},
+            'display': {'window_width': 1280, 'window_height': 720}
+        }
+
 
 def main():
-    # Camera stream URL
-    stream_url = "http://10.22.209.148:4747/video"
+    # Load configuration from YAML file
+    config = load_config()
+    
+    # Extract configuration values
+    stream_url = config['camera']['url']
+    buffer_size = config['camera']['buffer_size']
+    window_width = config['display']['window_width']
+    window_height = config['display']['window_height']
+    
+    print(f"\nConfiguration:")
+    print(f"  Camera URL: {stream_url}")
+    
+    print(f"\nConnecting to camera at {stream_url}...")
 
-    print(f"Connecting to camera at {stream_url}...")
-
-    # Use OpenCV's VideoCapture which handles MJPEG streams natively
     cap = cv2.VideoCapture(stream_url)
 
     if not cap.isOpened():
-        print(f"ERROR: Failed to open camera stream at {stream_url}")
+        print(f"✗ ERROR: Failed to open camera stream at {stream_url}")
         print("Please check:")
         print("1. The camera is on and streaming")
         print("2. The IP address is correct")
         print("3. Your computer is on the same network")
         return
 
-    print("✅ Connected successfully!")
+    print("✓ Connected successfully")
     print("\nPress 'q' in the video window to quit")
+    
+    # Set buffer size for lower latency
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size)
 
     frame_count = 0
     window_name = "Camera Stream - Press 'q' to quit"
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(window_name, 1280, 720)
+    cv2.resizeWindow(window_name, window_width, window_height)
 
     while True:
         # Read frame from camera

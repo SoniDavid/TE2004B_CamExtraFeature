@@ -20,7 +20,7 @@ def check_stream_quality(stream_url):
     cap = cv2.VideoCapture(stream_url)
 
     if not cap.isOpened():
-        print(f"\n❌ Failed to connect to: {stream_url}")
+        print(f"\nFailed to connect to: {stream_url}")
         return
 
     print(f"\n✓ Connected to: {stream_url}")
@@ -71,11 +71,11 @@ def check_stream_quality(stream_url):
 
         # Check if free or paid version
         if width <= 640 and height <= 480:
-            print("\n💡 Note: This appears to be DroidCam free version (480p limit)")
+            print("\n Note: This appears to be DroidCam free version (480p limit)")
             print("   Consider DroidCam X (paid) for 720p/1080p")
 
     else:
-        print("\n❌ Failed to read frame from stream")
+        print("\n Failed to read frame from stream")
 
     cap.release()
 
@@ -104,4 +104,4 @@ if __name__ == "__main__":
 
     check_stream_quality(CAMERA_URL)
 
-    print("\n💡 To check a different camera, edit CAMERA_URL in this script")
+    print("\n To check a different camera, edit CAMERA_URL in this script")

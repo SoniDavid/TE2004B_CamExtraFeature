@@ -8,6 +8,7 @@ Features:
 - ArUco marker detection
 - Real-time depth/distance estimation
 - Keyboard controls for different modes
+- Configuration via YAML file
 
 Controls:
   'a' - Toggle ArUco detection ON/OFF
@@ -23,6 +24,7 @@ Controls:
 import cv2
 import sys
 import os
+import yaml
 
 # Add parent directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +33,36 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 from camera_processing import ArucoDetector, ProcessingMode, create_processor
+
+
+def load_config(config_path="config.yaml"):
+    """Load configuration from YAML file."""
+    config_file = os.path.join(parent_dir, config_path)
+    
+    if not os.path.exists(config_file):
+        print(f"⚠ Warning: Config file not found: {config_file}")
+        print("Using default configuration.")
+        return {
+            'camera': {'url': 'http://10.22.227.47:4747/video', 'buffer_size': 1},
+            'aruco': {'dictionary_type': 'DICT_6X6_250', 'marker_size_cm': 15.0, 'focal_length_px': 490.20},
+            'display': {'window_width': 1280, 'window_height': 720, 'aruco_enabled': True, 
+                       'show_distance': True, 'show_id': True, 'processing_mode': 'original'}
+        }
+    
+    try:
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+        print(f"✓ Loaded configuration from: {config_path}")
+        return config
+    except Exception as e:
+        print(f"✗ Error loading config file: {e}")
+        print("Using default configuration.")
+        return {
+            'camera': {'url': 'http://10.22.227.47:4747/video', 'buffer_size': 1},
+            'aruco': {'dictionary_type': 'DICT_6X6_250', 'marker_size_cm': 15.0, 'focal_length_px': 490.20},
+            'display': {'window_width': 1280, 'window_height': 720, 'aruco_enabled': True, 
+                       'show_distance': True, 'show_id': True, 'processing_mode': 'original'}
+        }
 
 
 def print_help():
@@ -56,15 +88,40 @@ def print_help():
 
 
 def main():
-    # Configuration
-    CAMERA_URL = "http://10.22.227.47:4747/video"  # Change to your camera URL
-    MARKER_SIZE_CM = 15.0  # Real-world size of your printed marker in cm
-    ARUCO_DICT_TYPE = "DICT_6X6_250"
-    FOCAL_LENGTH_PX = 490.20  # Calibrated focal length for accurate depth measurement
+    # Load configuration from YAML file
+    config = load_config()
+    
+    # Extract configuration values
+    CAMERA_URL = config['camera']['url']
+    BUFFER_SIZE = config['camera']['buffer_size']
+    
+    ARUCO_DICT_TYPE = config['aruco']['dictionary_type']
+    MARKER_SIZE_CM = config['aruco']['marker_size_cm']
+    FOCAL_LENGTH_PX = config['aruco']['focal_length_px']
+    
+    WINDOW_WIDTH = config['display']['window_width']
+    WINDOW_HEIGHT = config['display']['window_height']
+    aruco_enabled = config['display']['aruco_enabled']
+    show_distance = config['display']['show_distance']
+    show_id = config['display']['show_id']
+    
+    # Map processing mode string to enum
+    mode_map = {
+        'original': ProcessingMode.ORIGINAL,
+        'grayscale': ProcessingMode.GRAYSCALE,
+        'edge_detection': ProcessingMode.EDGE_DETECTION
+    }
+    current_mode = mode_map.get(config['display']['processing_mode'], ProcessingMode.ORIGINAL)
     
     print_help()
     
-    print(f"Connecting to camera at {CAMERA_URL}...")
+    print(f"\nConfiguration:")
+    print(f"  Camera URL: {CAMERA_URL}")
+    print(f"  Marker size: {MARKER_SIZE_CM} cm")
+    print(f"  Focal length: {FOCAL_LENGTH_PX} px")
+    print(f"  ArUco dict: {ARUCO_DICT_TYPE}")
+    
+    print(f"\nConnecting to camera at {CAMERA_URL}...")
     cap = cv2.VideoCapture(CAMERA_URL)
     
     if not cap.isOpened():
@@ -75,7 +132,7 @@ def main():
     print("✓ Connected successfully!")
     
     # Set buffer size for lower latency
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, BUFFER_SIZE)
     
     # Initialize ArUco detector
     aruco_detector = ArucoDetector(
@@ -84,19 +141,13 @@ def main():
         focal_length_px=FOCAL_LENGTH_PX
     )
     
-    # Initialize frame processor (optional)
-    current_mode = ProcessingMode.ORIGINAL
+    # Initialize frame processor
     processor = create_processor(current_mode)
-    
-    # State flags
-    aruco_enabled = True
-    show_distance = True
-    show_id = True
     
     # Window setup
     window_name = "Camera Viewer - ArUco Detection (Press 'h' for help)"
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(window_name, 1280, 720)
+    cv2.resizeWindow(window_name, WINDOW_WIDTH, WINDOW_HEIGHT)
     
     frame_count = 0
     markers_detected = 0

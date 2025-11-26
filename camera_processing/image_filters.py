@@ -23,7 +23,7 @@ class ProcessingMode(Enum):
 class FrameProcessor:
     """
     Image filter processing pipeline for camera frames.
-    Supports multiple image filters and custom processing operations.
+    Multiple image filters and custom processing operations (No application right now on the project).
     """
 
     def __init__(self):
@@ -78,9 +78,6 @@ class FrameProcessor:
         """Disable frame processing (passthrough mode)."""
         self.enabled = False
 
-
-# Predefined processing functions
-
 def resize_frame(width: int, height: int) -> Callable:
     """
     Create a resize processing function.
@@ -101,7 +98,6 @@ def convert_to_grayscale(frame: np.ndarray) -> np.ndarray:
     """Convert frame to grayscale."""
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)  # Convert back to BGR for consistency
-
 
 def apply_edge_detection(frame: np.ndarray, threshold1: int = 100, threshold2: int = 200) -> np.ndarray:
     """
@@ -194,7 +190,6 @@ def apply_threshold(thresh_value: int = 127) -> Callable:
         return cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
     return _threshold
 
-
 def add_timestamp(frame: np.ndarray) -> np.ndarray:
     """Add timestamp overlay to frame."""
     from datetime import datetime
@@ -202,7 +197,6 @@ def add_timestamp(frame: np.ndarray) -> np.ndarray:
     cv2.putText(frame, timestamp, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                 0.7, (0, 255, 0), 2, cv2.LINE_AA)
     return frame
-
 
 def add_text_overlay(text: str, position: tuple = (10, 30),
                      color: tuple = (0, 255, 0), thickness: int = 2) -> Callable:

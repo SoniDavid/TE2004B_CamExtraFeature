@@ -2,16 +2,20 @@
 
 A modular camera processing system for real-time video streaming and ArUco marker detection with depth estimation.
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Generate ArUco Markers
+### 1. Configure Settings
+
+Edit `config.yaml` with your camera URL settings:
+
+### 2. Generate ArUco Markers
 ```bash
 python3 utils/generate_aruco_markers.py
 ```
 
 This will generate printable ArUco markers in the `aruco_markers/` directory.
 
-### 2. Run Camera Viewer with ArUco Detection
+### 3. Run Camera Viewer with ArUco Detection
 ```bash
 python3 viewer/aruco_viewer.py
 ```
@@ -26,41 +30,49 @@ python3 viewer/aruco_viewer.py
 - `h` - Show help
 - `q` - Quit
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-espCamFeature/
+TE2004B_CamExtraFeature/
+├── config.yaml                 # Main configuration file
+├── requirements.txt            # Python dependencies
+├── QUICKSTART.md               # Quick reference guide
+├── README.md                   # This file
+│
 ├── camera_processing/          # Core processing modules
-│   ├── __init__.py
+│   ├── __init__.py             # Module exports
 │   ├── aruco_detector.py       # ArUco marker detection & depth estimation
 │   └── image_filters.py        # Image processing filters
 │
 ├── viewer/                     # Viewer applications
-│   ├── aruco_viewer.py         # ✨ Main viewer with ArUco detection
+│   ├── aruco_viewer.py         # Main viewer with ArUco detection
 │   └── camera_viewer.py        # Simple camera viewer
 │
 ├── utils/                      # Utility scripts
-│   └── generate_aruco_markers.py # Generate printable ArUco markers
+│   ├── generate_aruco_markers.py   # Generate printable ArUco markers
+│   ├── calibrate_focal_length.py   # Focal length calibration tool
+│   └── check_stream_quality.py     # Camera stream diagnostics
 │
 ├── tests/                      # Test & diagnostic scripts
-│   └── diagnose_camera.py
+│   ├── diagnose_camera.py          # Camera connection diagnostics
+│   ├── test_aruco_detection.py     # ArUco detection tests
+│   └── test_aruco_simple.py        # Simple ArUco test
 │
 ├── docs/                       # Documentation
-│   ├── SETUP_GUIDE.md
-│   ├── CURRENT_STATUS.md
-│   ├── PROJECT_REORGANIZATION.md
-│   └── README_SOLUTION.md
+│   ├── SETUP_GUIDE.md              # Detailed setup instructions
+│   ├── CONFIGURATION.md            # Configuration guide
+│   ├── CURRENT_STATUS.md           # Current system status
+│   └── PROJECT_REORGANIZATION.md   # Project changes documentation
 │
-├── cam_server_page/            # Streamlit web app (optional)
+├── cam_server_page/            # Streamlit web app (TODO)
 │   ├── app_opencv.py
-│   └── app.py
+│   ├── app.py
+│   └── README.md
 │
-├── aruco_markers/              # Generated ArUco markers
-│
-└── requirements.txt
+└── aruco_markers/              # Generated ArUco markers (created at runtime)
 ```
 
-## 🎯 Features
+## Features
 
 ### ArUco Marker Detection
 - Real-time marker detection
@@ -78,52 +90,24 @@ espCamFeature/
 - Binary threshold
 
 ### Camera Support
-- DroidCam (Android/iOS camera apps)
+- DroidCam
 - IP Webcam
-- Any MJPEG/HTTP video stream
+- MJPEG/HTTP video stream
 - Built-in webcams
 
-## 📝 Setup
+## Setup
 
 ### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-Required packages:
-- opencv-python (with contrib for ArUco)
-- numpy
+### 2. Camera Calibration 
 
-### 2. Configure Camera URL
+For precise distance estimation, calibrate camera with `utils/calibrate_focal_length.py`
 
-Edit `viewer/aruco_viewer.py`:
-```python
-CAMERA_URL = "http://YOUR_CAMERA_IP:PORT/video"
-MARKER_SIZE_CM = 10.0  # Real size of your printed marker
-```
 
-### 3. Camera Calibration (Optional, for better accuracy)
-
-For precise distance estimation, calibrate your camera:
-```python
-from camera_processing import ArucoDetector
-import numpy as np
-
-# Your camera calibration matrix
-camera_matrix = np.array([
-    [fx, 0, cx],
-    [0, fy, cy],
-    [0, 0, 1]
-])
-
-detector = ArucoDetector(
-    marker_size_cm=10.0,
-    camera_matrix=camera_matrix,
-    dist_coeffs=dist_coeffs
-)
-```
-
-## 🔬 ArUco Depth Estimation
+## ArUco Depth Estimation
 
 ### How It Works
 
@@ -133,20 +117,7 @@ The distance to an ArUco marker is estimated using:
 Distance = (Real_Marker_Size × Focal_Length) / Perceived_Marker_Size_in_Pixels
 ```
 
-### Steps:
-1. **Print markers**: Use `utils/generate_aruco_markers.py`
-2. **Measure size**: Measure the printed marker in cm
-3. **Update config**: Set `MARKER_SIZE_CM` in the viewer
-4. **Run**: The viewer will show real-time distance estimates
-
-### Improving Accuracy:
-- Use camera calibration for best results
-- Keep markers flat and well-lit
-- Avoid glare and shadows
-- Use larger markers for distant detection
-- Calibrate focal length for your specific camera
-
-## 💡 Usage Examples
+## Usage Examples
 
 ### Basic ArUco Detection
 ```python
@@ -176,41 +147,9 @@ for marker in markers_info:
     print(f"Marker {marker['id']}: {marker['distance_cm']:.1f}cm away")
 ```
 
-### Generate Custom Markers
-```python
-from camera_processing import save_aruco_marker
-
-# Generate marker ID 42
-save_aruco_marker(
-    marker_id=42,
-    filename="my_marker.png",
-    marker_size=400,
-    aruco_dict_type="DICT_6X6_250"
-)
-```
-
-### With Image Processing
-```python
-from camera_processing import ArucoDetector, create_processor, ProcessingMode
-
-detector = ArucoDetector(marker_size_cm=10.0)
-processor = create_processor(ProcessingMode.GRAYSCALE)
-
-# Process and detect
-processed_frame = processor.process(frame)
-corners, ids, _ = detector.detect(processed_frame)
-```
-
-## 🛠️ Configuration
-
-### Camera URL Examples:
-- **DroidCam**: `http://10.22.209.148:4747/video`
-- **IP Webcam**: `http://192.168.1.100:8080/video`
-- **Built-in webcam**: Use `0` or `1` as device index
-
 ### ArUco Dictionary Types:
 - `DICT_4X4_50` - Good for small markers, fewer IDs
-- `DICT_6X6_250` - **Recommended** - good balance
+- `DICT_6X6_250` - Good balance
 - `DICT_7X7_1000` - More unique IDs, larger markers
 
 ### Marker Sizes:
@@ -218,7 +157,7 @@ corners, ids, _ = detector.detect(processed_frame)
 - **Medium (10-20cm)**: General purpose (1-3m)
 - **Large (20-50cm)**: Long range (3-10m)
 
-## 📊 Performance Tips
+## Performance Tips
 
 1. **Lower latency**: Set buffer size to 1
    ```python
@@ -231,55 +170,4 @@ corners, ids, _ = detector.detect(processed_frame)
 
 4. **Multiple markers**: Use unique IDs for each marker
 
-## 🐛 Troubleshooting
 
-### "Failed to connect to camera"
-- Check camera URL is correct
-- Ensure camera app is running
-- Verify same WiFi network
-
-### "No markers detected"
-- Ensure good lighting
-- Check marker is printed clearly
-- Verify correct ArUco dictionary type
-- Marker should be flat and visible
-
-### "Inaccurate distance"
-- Measure marker size accurately
-- Adjust `MARKER_SIZE_CM` value
-- Consider camera calibration
-- Adjust `FOCAL_LENGTH_PX` value
-
-## 📚 Documentation
-
-- **Setup Guide**: `docs/SETUP_GUIDE.md`
-- **Current Status**: `docs/CURRENT_STATUS.md`
-- **Solution Details**: `docs/README_SOLUTION.md`
-
-## 🎓 Learning Resources
-
-### ArUco Markers:
-- Official OpenCV ArUco documentation
-- Camera calibration tutorials
-- Pose estimation guides
-
-### Depth Estimation:
-- Pinhole camera model
-- Focal length calculation
-- Camera calibration techniques
-
-## 🤝 Contributing
-
-Feel free to extend the system with:
-- Additional image processing filters
-- More marker detection algorithms
-- Camera calibration tools
-- 3D pose visualization
-
-## 📄 License
-
-Open source - use for educational and project purposes.
-
----
-
-**Happy marker detecting! 📷✨**
