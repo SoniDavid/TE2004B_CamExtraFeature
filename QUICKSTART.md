@@ -1,6 +1,6 @@
 # Quick Reference - Camera Viewer with ArUco
 
-## 🚀 Run Commands
+## Run Commands
 
 ```bash
 # Generate printable ArUco markers
@@ -13,7 +13,7 @@ python3 viewer/aruco_viewer.py
 python3 viewer/camera_viewer.py
 ```
 
-## ⌨️ Keyboard Controls
+## Keyboard Controls
 
 | Key | Action |
 |-----|--------|
@@ -26,49 +26,59 @@ python3 viewer/camera_viewer.py
 | `h` | Show help |
 | `q` | Quit |
 
-## 📝 Configuration
+## Configuration
 
-Edit `viewer/aruco_viewer.py`:
+Edit `config.yaml`
 
-```python
-CAMERA_URL = "http://10.22.209.148:4747/video"  # Your DroidCam IP
-MARKER_SIZE_CM = 10.0   # Measured marker size in cm
-FOCAL_LENGTH_PX = 1000.0  # Adjust for accuracy
+```yaml
+camera:
+  url: "http://192.168.1.100:4747/video"  
+  buffer_size: 1                          
+  
+aruco:
+  marker_size_cm: 15.0      
+  focal_length_px: 490.20   
+  dictionary_type: "DICT_6X6_250"
+
+display:
+  window_width: 1280
+  window_height: 720
 ```
 
-## 📁 File Locations
-
-```
-viewer/aruco_viewer.py          ← Main application with ArUco
-viewer/camera_viewer.py         ← Simple camera viewer
-utils/generate_aruco_markers.py ← Generate markers
-aruco_markers/                  ← Generated markers
-camera_processing/              ← Core modules
+**To calibrate focal length for accurate depth:**
+```bash
+python3 utils/calibrate_focal_length.py
 ```
 
-## 🎯 Quick Start
+## File Locations
 
-1. Generate markers: `python3 utils/generate_aruco_markers.py`
-2. Print `aruco_markers/marker_sheet_0.png`
-3. Measure printed marker size in cm
-4. Update `MARKER_SIZE_CM` in `viewer/aruco_viewer.py`
-5. Run: `python3 viewer/aruco_viewer.py`
-6. Point camera at printed marker
-7. See distance in real-time!
+```
+config.yaml                     - Configuration file
+viewer/aruco_viewer.py          - Main application with ArUco
+viewer/camera_viewer.py         - Simple camera viewer
+utils/generate_aruco_markers.py - Generate markers
+utils/calibrate_focal_length.py - Calibrate depth measurement
+aruco_markers/                  - Generated markers
+camera_processing/              - Core modules
+```
 
-## 🔧 Troubleshooting
+## Quick Start Steps
+
+1. Edit `config.yaml` with your camera URL
+2. Generate markers: `python3 utils/generate_aruco_markers.py`
+3. Print `aruco_markers/printable_sheet.png`
+4. Measure printed marker size in cm
+5. Update `marker_size_cm` in `config.yaml`
+6. Calibrate focal length: `python3 utils/calibrate_focal_length.py`
+7. Run: `python3 viewer/aruco_viewer.py`
+8. Point camera at printed marker
+9. See distance in real-time
+
+## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| Can't connect to camera | Check camera URL, ensure camera app is running |
-| No markers detected | Check lighting, marker should be flat and visible |
-| Inaccurate distance | Measure marker accurately, adjust FOCAL_LENGTH_PX |
-| Import error | Run from project root: `cd espCamFeature` |
-
-## 💡 Tips
-
-- Use white paper for printing
-- Keep markers flat and perpendicular
-- Good lighting is essential
-- Larger markers = farther detection
-- Each marker needs unique ID
+| Can't connect to camera | Check camera URL in config.yaml, ensure camera app is running |
+| No markers detected | Check lighting, marker should be flat with white border |
+| Inaccurate distance | Measure marker accurately, calibrate focal_length_px in config.yaml |
+| Import error | Run from project root directory |

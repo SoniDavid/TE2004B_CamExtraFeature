@@ -1,13 +1,13 @@
-# 📷 Camera Stream Web Application
+# Camera Stream Web Application
 
 A Streamlit-based web application that captures your camera feed and displays it in real-time on a web interface.
 
 ## Features
 
-- 🎥 Real-time camera feed streaming
-- 🌐 Web-based interface accessible from any browser
-- 🛑 Stop/Start camera controls
-- 📱 Responsive layout
+- Real-time camera feed streaming
+- Web-based interface accessible from any browser
+- Stop/Start camera controls
+- Responsive layout
 
 ## Requirements
 

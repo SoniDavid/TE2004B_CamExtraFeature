@@ -1,0 +1,35 @@
+# ArUco Viewer Configuration
+# Configuration file for ArUco marker detection and depth estimation
+
+camera:
+  # Camera stream URL (DroidCam, IP camera, or local camera)
+  url: "http://10.22.227.47:4747/video"
+  # Buffer size for lower latency 
+  buffer_size: 1
+
+aruco:
+  # ArUco dictionary type
+  # Options: DICT_4X4_50, DICT_5X5_50, DICT_6X6_50, DICT_6X6_250, DICT_7X7_50, etc.
+  dictionary_type: "DICT_6X6_250"
+  
+  # Real-world size
+  # MEASURE THE BLACK SQUARE (not including white border)
+  marker_size_cm: 15.0
+  
+  # FOCAL LENGTH in pixels
+  # Run utils/calibrate_focal_length.py to get accurate value
+  focal_length_px: 490.20
+
+display:
+  # Window settings
+  window_width: 1280
+  window_height: 720
+  
+  # Initial display states
+  aruco_enabled: true
+  show_distance: true
+  show_id: true
+  
+  # Default processing mode
+  # Options: original, grayscale, edge_detection
+  processing_mode: "original"

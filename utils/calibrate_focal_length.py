@@ -29,7 +29,7 @@ def calibrate_focal_length(camera_url, marker_size_cm, aruco_dict_type="DICT_6X6
     """
     Interactive calibration to find the correct focal length.
     
-    Formula: focal_length = (perceived_width_px × actual_distance_cm) / marker_size_cm
+    Formula: focal_length = (perceived_width_px x actual_distance_cm) / marker_size_cm
     """
     
     print("="*70)
@@ -50,7 +50,7 @@ def calibrate_focal_length(camera_url, marker_size_cm, aruco_dict_type="DICT_6X6
         print("✗ Cannot connect to camera")
         return None
     
-    print("✓ Camera connected")
+    print("CAMERA CONNECTED")
     
     # Create detector with a default focal length (we'll calibrate this)
     detector = ArucoDetector(
@@ -62,13 +62,13 @@ def calibrate_focal_length(camera_url, marker_size_cm, aruco_dict_type="DICT_6X6
     measurements = []
     
     print("\n" + "="*70)
-    print("Starting calibration...")
+    print("STARTING CALIBRATION...")
     print("="*70)
     
     while True:
         ret, frame = cap.read()
         if not ret or frame is None:
-            print("✗ Failed to read frame")
+            print("Failed to read frame")
             continue
         
         # Detect markers
@@ -143,7 +143,7 @@ def calibrate_focal_length(camera_url, marker_size_cm, aruco_dict_type="DICT_6X6
                 'focal_length': focal_length
             })
             
-            print(f"✓ Measurement recorded:")
+            print(f"MEASUREMENT RECORDED:")
             print(f"  - Actual distance: {actual_distance_cm} cm")
             print(f"  - Perceived width: {perceived_width_px:.2f} px")
             print(f"  - Calculated focal length: {focal_length:.2f} px")
@@ -178,7 +178,7 @@ def calibrate_focal_length(camera_url, marker_size_cm, aruco_dict_type="DICT_6X6
     print(f"Standard deviation: {std_focal_length:.2f} px")
     print(f"{'='*70}")
     
-    print("\n✓ Calibration complete!")
+    print("\nCALIBRATION COMPLETE!")
     print("\nNext steps:")
     print(f"  1. Open viewer/aruco_viewer.py")
     print(f"  2. Change this line:")
@@ -191,7 +191,7 @@ def calibrate_focal_length(camera_url, marker_size_cm, aruco_dict_type="DICT_6X6
 def main():
     # Configuration
     CAMERA_URL = "http://10.22.227.47:4747/video"
-    MARKER_SIZE_CM = 15.0  # Your actual marker size
+    MARKER_SIZE_CM = 15.0 
     ARUCO_DICT_TYPE = "DICT_6X6_250"
     
     print("\nConfiguration:")
