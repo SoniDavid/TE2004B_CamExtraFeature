@@ -11,10 +11,14 @@ python3 viewer/aruco_viewer.py
 
 # Run simple viewer (no ArUco)
 python3 viewer/camera_viewer.py
+
+# Run autonomous navigation (TE2004B Robot)
+python3 aruco_navigation.py
 ```
 
 ## Keyboard Controls
 
+### ArUco Viewer
 | Key | Action |
 |-----|--------|
 | `a` | Toggle ArUco detection ON/OFF |
@@ -24,6 +28,18 @@ python3 viewer/camera_viewer.py
 | `e` | Edge detection |
 | `o` | Original (no processing) |
 | `h` | Show help |
+| `q` | Quit |
+
+### Autonomous Navigation
+| Key | Action |
+|-----|--------|
+| `p` | Pause/Resume autonomous mode |
+| `m` | Toggle manual override |
+| `w` | Manual throttle forward |
+| `s` | Manual throttle backward |
+| `a` | Manual steering left |
+| `d` | Manual steering right |
+| `space` | Stop (manual mode) |
 | `q` | Quit |
 
 ## Configuration
@@ -43,6 +59,14 @@ aruco:
 display:
   window_width: 1280
   window_height: 720
+
+navigation:
+  target_distance_cm: 25.0   # Target distance from marker
+  max_steering: 0.6          # Maximum steering angle
+  base_throttle: 0.3         # Forward speed
+  can:
+    channel: "can0"
+    bitrate: 500000
 ```
 
 **To calibrate focal length for accurate depth:**
@@ -54,12 +78,14 @@ python3 utils/calibrate_focal_length.py
 
 ```
 config.yaml                     - Configuration file
+aruco_navigation.py             - Autonomous navigation controller (BLE)
 viewer/aruco_viewer.py          - Main application with ArUco
 viewer/camera_viewer.py         - Simple camera viewer
 utils/generate_aruco_markers.py - Generate markers
 utils/calibrate_focal_length.py - Calibrate depth measurement
 aruco_markers/                  - Generated markers
 camera_processing/              - Core modules
+docs/ARUCO_NAVIGATION.md        - Navigation documentation
 ```
 
 ## Quick Start Steps

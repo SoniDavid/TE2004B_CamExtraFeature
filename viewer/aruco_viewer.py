@@ -40,7 +40,7 @@ def load_config(config_path="config.yaml"):
     config_file = os.path.join(parent_dir, config_path)
     
     if not os.path.exists(config_file):
-        print(f"⚠ Warning: Config file not found: {config_file}")
+        print(f" Warning: Config file not found: {config_file}")
         print("Using default configuration.")
         return {
             'camera': {'url': 'http://10.22.227.47:4747/video', 'buffer_size': 1},
@@ -125,11 +125,11 @@ def main():
     cap = cv2.VideoCapture(CAMERA_URL)
     
     if not cap.isOpened():
-        print(f"✗ ERROR: Failed to connect to camera")
-        print(f"  URL: {CAMERA_URL}")
+        print(f" ERROR: Failed to connect to camera")
+        print(f" URL: {CAMERA_URL}")
         return
     
-    print("✓ Connected successfully!")
+    print("CONNECTED SUCCESSFULLY!")
     
     # Set buffer size for lower latency
     cap.set(cv2.CAP_PROP_BUFFERSIZE, BUFFER_SIZE)
