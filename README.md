@@ -1,6 +1,6 @@
 # Camera Processing System with ArUco Detection
 
-A modular camera processing system for real-time video streaming and ArUco marker detection with depth estimation.
+A modular camera processing system for real-time video streaming, ArUco marker detection with depth estimation, and autonomous robot navigation.
 
 ## Quick Start
 
@@ -30,12 +30,35 @@ python3 viewer/aruco_viewer.py
 - `h` - Show help
 - `q` - Quit
 
+### 4. Run Autonomous Navigation (TE2004B Robot)
+```bash
+python3 aruco_navigation.py
+```
+
+Autonomous navigation system that controls the TE2004B robot car based on ArUco marker detection.
+
+**Features:**
+- Maintains target distance from marker (default: 25cm)
+- Auto-steers to keep marker centered
+- CAN bus integration (ID 0x125)
+- Manual override mode
+
+**Controls:**
+- `p` - Pause/Resume autonomous mode
+- `m` - Toggle manual mode
+- `w`/`s` - Manual throttle
+- `a`/`d` - Manual steering
+- `q` - Quit
+
+See [docs/ARUCO_NAVIGATION.md](docs/ARUCO_NAVIGATION.md) for detailed documentation.
+
 ## Project Structure
 
 ```
 TE2004B_CamExtraFeature/
 ├── config.yaml                 # Main configuration file
 ├── requirements.txt            # Python dependencies
+├── aruco_navigation.py         # Autonomous navigation controller
 ├── QUICKSTART.md               # Quick reference guide
 ├── README.md                   # This file
 │
@@ -57,6 +80,11 @@ TE2004B_CamExtraFeature/
 │   ├── diagnose_camera.py          # Camera connection diagnostics
 │   ├── test_aruco_detection.py     # ArUco detection tests
 │   └── test_aruco_simple.py        # Simple ArUco test
+│
+├── docs/                       # Documentation
+│   ├── ARUCO_NAVIGATION.md         # Navigation system documentation
+│   ├── SETUP_GUIDE.md              # Setup instructions
+│   └── README_SOLUTION.md          # Technical details
 │
 ├── docs/                       # Documentation
 │   ├── SETUP_GUIDE.md              # Detailed setup instructions

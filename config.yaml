@@ -3,7 +3,7 @@
 
 camera:
   # Camera stream URL (DroidCam, IP camera, or local camera)
-  url: "http://10.22.227.47:4747/video"
+  url: "http://10.22.231.72:4747/video"
   # Buffer size for lower latency 
   buffer_size: 1
 
@@ -33,3 +33,52 @@ display:
   # Default processing mode
   # Options: original, grayscale, edge_detection
   processing_mode: "original"
+
+navigation:
+  # Target distance to maintain from ArUco marker (in cm)
+  target_distance_cm: 35.0
+  
+  # Distance tolerance (stop if within this range of target)
+  distance_tolerance_cm: 3.0
+  
+  # Maximum steering angle (range: 0.0 to 1.0)
+  max_steering: 1.0
+  
+  # Steering proportional gain (higher = more aggressive steering)
+  # For 1280px width: 0.002 means 100px error = 0.2 steering
+  steering_kp: 0.002
+  
+  # Base throttle when moving forward
+  base_throttle: 0.4
+  
+  # Frame center tolerance for alignment (in pixels)
+  frame_center_tolerance: 50
+  
+  # Steering optimization for BLE efficiency
+  # Dead zone: Range around center where steering = 0 (reduces jitter)
+  steering_dead_zone: 0.1
+  
+  # Quantization: Minimum steering change to send (reduces BLE spam)
+  # e.g., 0.05 means steering rounds to 0.00, 0.05, 0.10, 0.15, etc.
+  steering_quantization: 0.10
+  
+  # BLE configuration (connects to ESP32-C3 sensor hub)
+  ble:
+    device_name: "BLE_Sensor_Hub"
+    service_uuid: "12345678-1234-5678-1234-56789abcdef0"
+    char_throttle_uuid: "12345678-1234-5678-1234-56789abcdef2"
+    char_steering_uuid: "12345678-1234-5678-1234-56789abcdef3"
+
+# Color-based tracking configuration
+color_tracking:
+  # HSV color range for tracking (default: red)
+  # Use utils/calibrate_color_mask.py to calibrate
+  hsv_lower: [0, 100, 100]    # [H_min, S_min, V_min]
+  hsv_upper: [10, 255, 255]   # [H_max, S_max, V_max]
+  
+  # Minimum contour area to be considered a valid target (in pixels)
+  min_contour_area: 500
+  
+  # Target area ratio (target object size as fraction of frame area)
+  # e.g., 0.05 means target should occupy 5% of frame when at desired distance
+  target_area_ratio: 0.05
