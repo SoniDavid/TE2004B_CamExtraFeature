@@ -36,6 +36,7 @@ display:
 
 navigation:
   # Target distance to maintain from ArUco marker (in cm)
+
   # Increased for narrow FOV to keep marker visible
   target_distance_cm: 50.0
   
