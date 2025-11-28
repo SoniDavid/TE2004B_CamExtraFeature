@@ -35,12 +35,6 @@ if current_dir not in sys.path:
 
 from camera_processing import ArucoDetector
 
-# BLE Configuration (matches TE2004B sensor_hub)
-TARGET_DEVICE_NAME = "BLE_Sensor_Hub"
-SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0"
-CHAR_UUID_THROTTLE = "12345678-1234-5678-1234-56789abcdef2"
-CHAR_UUID_STEERING = "12345678-1234-5678-1234-56789abcdef3"
-
 
 def to_byte(val):
     """Convert value from -1.0 to +1.0 to byte (0-255)."""
@@ -77,9 +71,16 @@ class ArucoNavigationController:
         self.steering_kp = nav_cfg.get('steering_kp', 0.003)
         self.base_throttle = nav_cfg.get('base_throttle', 0.3)
         
+        # Steering quantization and dead zone
+        self.steering_dead_zone = nav_cfg.get('steering_dead_zone', 0.1)  # Center zone where steering=0
+        self.steering_quantization = nav_cfg.get('steering_quantization', 0.05)  # Min steering change
+        
         # BLE setup
         ble_cfg = nav_cfg.get('ble', {})
-        self.ble_device_name = ble_cfg.get('device_name', TARGET_DEVICE_NAME)
+        self.ble_device_name = ble_cfg.get('device_name', 'BLE_Sensor_Hub')
+        self.ble_service_uuid = ble_cfg.get('service_uuid', '12345678-1234-5678-1234-56789abcdef0')
+        self.ble_throttle_uuid = ble_cfg.get('char_throttle_uuid', '12345678-1234-5678-1234-56789abcdef2')
+        self.ble_steering_uuid = ble_cfg.get('char_steering_uuid', '12345678-1234-5678-1234-56789abcdef3')
         
         # State
         self.autonomous_mode = True
@@ -126,7 +127,12 @@ class ArucoNavigationController:
                 'max_steering': 0.6,
                 'steering_kp': 0.003,
                 'base_throttle': 0.3,
-                'ble': {'device_name': 'BLE_Sensor_Hub'}
+                'ble': {
+                    'device_name': 'BLE_Sensor_Hub',
+                    'service_uuid': '12345678-1234-5678-1234-56789abcdef0',
+                    'char_throttle_uuid': '12345678-1234-5678-1234-56789abcdef2',
+                    'char_steering_uuid': '12345678-1234-5678-1234-56789abcdef3'
+                }
             }
         }
     
@@ -176,22 +182,29 @@ class ArucoNavigationController:
         return True
     
     async def _ble_sender_task(self):
-        """Dedicated background task for sending BLE commands."""
+        """Dedicated background task for sending BLE commands at 4Hz (250ms)."""
+        last_throttle_byte = None
+        last_steering_byte = None
+        
         while self.running:
             try:
                 if self.ble_client and self.ble_client.is_connected:
                     throttle_byte = to_byte(self.current_throttle)
                     steering_byte = to_byte(self.current_steering)
                     
-                    # Fast, non-blocking writes
-                    await self.ble_client.write_gatt_char(CHAR_UUID_THROTTLE, bytearray([throttle_byte]))
-                    await self.ble_client.write_gatt_char(CHAR_UUID_STEERING, bytearray([steering_byte]))
+                    # Only send if values changed to avoid spamming ESP32
+                    if throttle_byte != last_throttle_byte or steering_byte != last_steering_byte:
+                        await self.ble_client.write_gatt_char(self.ble_throttle_uuid, bytearray([throttle_byte]))
+                        await self.ble_client.write_gatt_char(self.ble_steering_uuid, bytearray([steering_byte]))
+                        print(f"[BLE TX] Throttle: {self.current_throttle:+.2f} ({throttle_byte:3d}) | Steering: {self.current_steering:+.2f} ({steering_byte:3d})")
+                        last_throttle_byte = throttle_byte
+                        last_steering_byte = steering_byte
                 
-                # Send at 20Hz (50ms interval)
-                await asyncio.sleep(0.05)
+                # Send at 4Hz (250ms interval) - gentler on ESP32
+                await asyncio.sleep(0.25)
             except Exception as e:
                 print(f"[BLE sender error: {e}]")
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.5)
     
     def send_motor_command(self, throttle, steering):
         """
@@ -211,7 +224,7 @@ class ArucoNavigationController:
     
     def calculate_steering(self, marker_center_x):
         """
-        Calculate steering based on marker position in frame.
+        Calculate steering based on marker position with dead zone and quantization.
         
         Args:
             marker_center_x: X coordinate of marker center in pixels
@@ -230,8 +243,18 @@ class ArucoNavigationController:
         # Marker on left (error < 0) → Turn left (negative steering)
         steering = error * self.steering_kp
         
+        # Apply dead zone - no steering if marker is near center
+        # This reduces jitter when marker is approximately centered
+        if abs(steering) < self.steering_dead_zone:
+            steering = 0.0
+        
         # Clamp to max steering
         steering = max(-self.max_steering, min(self.max_steering, steering))
+        
+        # Quantize steering to reduce BLE spam from tiny changes
+        # Round to nearest quantization step (e.g., 0.05 intervals)
+        if steering != 0.0:
+            steering = round(steering / self.steering_quantization) * self.steering_quantization
         
         return steering
     
