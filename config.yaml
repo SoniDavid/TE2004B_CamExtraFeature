@@ -54,7 +54,7 @@ navigation:
   
   # Backward throttle multiplier (when too close)
   # e.g., 0.8 means backward at 80% of base_throttle
-  backward_throttle_multiplier: 0.6
+  backward_throttle_multiplier: 0.8
   
   # Frame center tolerance for alignment (in pixels)
   frame_center_tolerance: 50
