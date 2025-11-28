@@ -14,7 +14,7 @@ aruco:
   
   # Real-world size
   # MEASURE THE BLACK SQUARE (not including white border)
-  marker_size_cm: 15.0
+  marker_size_cm: 15.8  
   
   # FOCAL LENGTH in pixels
   # Run utils/calibrate_focal_length.py to get accurate value
@@ -36,7 +36,8 @@ display:
 
 navigation:
   # Target distance to maintain from ArUco marker (in cm)
-  target_distance_cm: 35.0
+  # Increased for narrow FOV to keep marker visible
+  target_distance_cm: 50.0
   
   # Distance tolerance (stop if within this range of target)
   distance_tolerance_cm: 3.0
@@ -46,10 +47,14 @@ navigation:
   
   # Steering proportional gain (higher = more aggressive steering)
   # For 1280px width: 0.002 means 100px error = 0.2 steering
-  steering_kp: 0.002
+  steering_kp: 0.005
   
   # Base throttle when moving forward
-  base_throttle: 0.4
+  base_throttle: 0.5
+  
+  # Backward throttle multiplier (when too close)
+  # e.g., 0.8 means backward at 80% of base_throttle
+  backward_throttle_multiplier: 0.6
   
   # Frame center tolerance for alignment (in pixels)
   frame_center_tolerance: 50
@@ -82,3 +87,4 @@ color_tracking:
   # Target area ratio (target object size as fraction of frame area)
   # e.g., 0.05 means target should occupy 5% of frame when at desired distance
   target_area_ratio: 0.05
+ 
