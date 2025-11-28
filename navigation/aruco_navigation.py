@@ -30,8 +30,9 @@ from bleak import BleakScanner, BleakClient
 
 # Add parent directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from camera_processing import ArucoDetector
 
@@ -44,8 +45,12 @@ def to_byte(val):
 class ArucoNavigationController:
     """Controller for ArUco-based autonomous navigation via BLE."""
     
-    def __init__(self, config_path="config.yaml"):
+    def __init__(self, config_path=None):
         """Initialize the navigation controller."""
+        if config_path is None:
+            # Default to config.yaml in parent directory
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(os.path.dirname(script_dir), 'config.yaml')
         self.config = self.load_config(config_path)
         
         # Extract configuration
@@ -70,6 +75,7 @@ class ArucoNavigationController:
         self.max_steering = nav_cfg.get('max_steering', 0.6)
         self.steering_kp = nav_cfg.get('steering_kp', 0.003)
         self.base_throttle = nav_cfg.get('base_throttle', 0.3)
+        self.backward_throttle_multiplier = nav_cfg.get('backward_throttle_multiplier', 0.5)
         
         # Steering quantization and dead zone
         self.steering_dead_zone = nav_cfg.get('steering_dead_zone', 0.1)  # Center zone where steering=0
@@ -297,8 +303,10 @@ class ArucoNavigationController:
                     # Too far, move forward
                     throttle = self.base_throttle
                 else:
-                    # Too close, move backward slowly
-                    throttle = -self.base_throttle * 0.5
+                    # Too close, move backward
+                    throttle = -self.base_throttle * self.backward_throttle_multiplier
+                    # Invert steering when going backward (Ackermann kinematics)
+                    steering = -steering
             else:
                 # Within tolerance, stop
                 throttle = 0.0
