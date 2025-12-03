@@ -1,0 +1,109 @@
+# Waypoint Marker Configuration
+# ================================
+# Configuration file for the waypoint control GUI
+
+# Workspace Configuration
+# -----------------------
+# Physical dimensions of your workspace in centimeters
+workspace:
+  max_x: 180.0  # Width in cm
+  max_y: 120.0  # Height in cm
+
+# GUI Window Settings
+# -------------------
+# Size of the GUI window in pixels
+window:
+  width: 800   # pixels
+  height: 600  # pixels
+  title: "Waypoint Control"
+
+# BLE Configuration
+# -----------------
+# Bluetooth Low Energy settings for robot communication
+ble:
+  # Device name to search for (if empty, will use first available)
+  device_name: ""
+  
+  # Connection timeout in seconds
+  connection_timeout: 10.0
+  
+  # Retry attempts on connection failure
+  max_retries: 3
+  
+  # Enable simulation mode if BLE fails
+  simulation_on_failure: true
+
+# Waypoint Settings
+# -----------------
+waypoint:
+  # Default omega (rotation) value in radians
+  default_omega: 0.0
+  
+  # Rounding precision for coordinates (decimal places)
+  coordinate_precision: 1
+  
+  # Visual marker settings
+  marker:
+    radius: 8          # Marker size in pixels
+    color: "#ff4444"   # Fill color
+    outline: "#cc0000" # Border color
+    width: 2           # Border width
+
+# Dashboard Streaming
+# -------------------
+# Settings for streaming data to web dashboard
+dashboard:
+  # Enable by default (can be overridden with --stream-output)
+  enabled: false
+  
+  # Update frequency
+  update_rate_hz: 5.0
+
+# Display Settings
+# ----------------
+display:
+  # Show coordinate labels at corners
+  show_corner_labels: true
+  
+  # Show reference grid lines
+  show_grid: true
+  
+  # Grid line style
+  grid_style:
+    color: "lightgray"
+    dash: [5, 5]  # Dash pattern
+  
+  # Border settings
+  border:
+    color: "black"
+    width: 2
+  
+  # Colors
+  colors:
+    background: "#f0f0f0"
+    canvas_bg: "white"
+    text: "gray"
+    marker_label: "#cc0000"
+
+# Fonts
+# -----
+fonts:
+  coordinate_label:
+    family: "Arial"
+    size: 12
+    weight: "bold"
+  
+  info_label:
+    family: "Arial"
+    size: 9
+    weight: "normal"
+  
+  corner_labels:
+    family: "Arial"
+    size: 9
+    weight: "normal"
+  
+  marker_label:
+    family: "Arial"
+    size: 10
+    weight: "bold"

@@ -19,18 +19,25 @@ Controls:
   'o' - Original (no processing)
   'q' - Quit
   'h' - Show help
+
+Usage:
+  python3 aruco_viewer.py
 """
 
 import cv2
 import sys
 import os
 import yaml
+import argparse
 
 # Add parent directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
+project_root = os.path.dirname(parent_dir)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from camera_processing import ArucoDetector, ProcessingMode, create_processor
 

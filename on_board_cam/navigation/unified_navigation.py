@@ -22,12 +22,16 @@ import cv2
 import sys
 import os
 import asyncio
+from pathlib import Path
 
 # Add parent directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
+project_root = os.path.dirname(parent_dir)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from navigation.base_navigation import BaseNavigationController, to_byte
 from navigation.target_detectors import ArucoTargetDetector, ColorTargetDetector
@@ -304,7 +308,9 @@ def main():
                        help='Initial detector type (default: aruco)')
     args = parser.parse_args()
     
-    controller = UnifiedNavigationController(initial_detector=args.detector)
+    controller = UnifiedNavigationController(
+        initial_detector=args.detector
+    )
     controller.run()
 
 

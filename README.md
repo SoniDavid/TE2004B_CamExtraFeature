@@ -1,201 +1,327 @@
-# Camera Processing System with ArUco Detection
+# TE2004B Robot Control System
 
-A modular camera processing system for real-time video streaming, ArUco marker detection with depth estimation, and autonomous robot navigation.
-
-## Quick Start
-
-### 1. Configure Settings
-
-Edit `config.yaml` with your camera URL settings:
-
-### 2. Generate ArUco Markers
-```bash
-python3 utils/generate_aruco_markers.py
-```
-
-This will generate printable ArUco markers in the `aruco_markers/` directory.
-
-### 3. Run Camera Viewer with ArUco Detection
-```bash
-python3 viewer/aruco_viewer.py
-```
-
-**Keyboard Controls:**
-- `a` - Toggle ArUco detection ON/OFF
-- `d` - Toggle distance display
-- `i` - Toggle marker ID display  
-- `g` - Grayscale mode
-- `e` - Edge detection
-- `o` - Original (no processing)
-- `h` - Show help
-- `q` - Quit
-
-### 4. Run Autonomous Navigation (TE2004B Robot)
-```bash
-python3 aruco_navigation.py
-```
-
-Autonomous navigation system that controls the TE2004B robot car based on ArUco marker detection.
-
-**Features:**
-- Maintains target distance from marker (default: 25cm)
-- Auto-steers to keep marker centered
-- CAN bus integration (ID 0x125)
-- Manual override mode
-
-**Controls:**
-- `p` - Pause/Resume autonomous mode
-- `m` - Toggle manual mode
-- `w`/`s` - Manual throttle
-- `a`/`d` - Manual steering
-- `q` - Quit
-
-See [docs/ARUCO_NAVIGATION.md](docs/ARUCO_NAVIGATION.md) for detailed documentation.
+A modular robot control system with camera-based navigation and waypoint control for ESP32-C3 robot car.
 
 ## Project Structure
 
 ```
 TE2004B_CamExtraFeature/
-├── config.yaml                 # Main configuration file
-├── requirements.txt            # Python dependencies
-├── aruco_navigation.py         # Autonomous navigation controller
-├── QUICKSTART.md               # Quick reference guide
-├── README.md                   # This file
+├── launch.py                  
+├── on_board_cam/              # Camera-based navigation
+│   ├── navigation/            # Autonomous navigation controllers
+│   │   ├── unified_navigation.py    # Switchable detector (ArUco/Color)
+│   │   ├── aruco_navigation.py      # ArUco-only navigation
+│   │   └── base_navigation.py       # Base controller with BLE
+│   ├── camera_processing/     # ArUco detection, image filters
+│   ├── viewer/                # Camera viewers
+│   ├── utils/                 # Calibration tools
+│   └── config.yaml            # Camera & navigation settings
 │
-├── camera_processing/          # Core processing modules
-│   ├── __init__.py             # Module exports
-│   ├── aruco_detector.py       # ArUco marker detection & depth estimation
-│   └── image_filters.py        # Image processing filters
-│
-├── viewer/                     # Viewer applications
-│   ├── aruco_viewer.py         # Main viewer with ArUco detection
-│   └── camera_viewer.py        # Simple camera viewer
-│
-├── utils/                      # Utility scripts
-│   ├── generate_aruco_markers.py   # Generate printable ArUco markers
-│   ├── calibrate_focal_length.py   # Focal length calibration tool
-│   └── check_stream_quality.py     # Camera stream diagnostics
-│
-├── tests/                      # Test & diagnostic scripts
-│   ├── diagnose_camera.py          # Camera connection diagnostics
-│   ├── test_aruco_detection.py     # ArUco detection tests
-│   └── test_aruco_simple.py        # Simple ArUco test
-│
-├── docs/                       # Documentation
-│   ├── ARUCO_NAVIGATION.md         # Navigation system documentation
-│   ├── SETUP_GUIDE.md              # Setup instructions
-│   └── README_SOLUTION.md          # Technical details
-│
-├── docs/                       # Documentation
-│   ├── SETUP_GUIDE.md              # Detailed setup instructions
-│   ├── CONFIGURATION.md            # Configuration guide
-│   ├── CURRENT_STATUS.md           # Current system status
-│   └── PROJECT_REORGANIZATION.md   # Project changes documentation
-│
-├── cam_server_page/            # Streamlit web app (TODO)
-│   ├── app_opencv.py
-│   ├── app.py
-│   └── README.md
-│
-└── aruco_markers/              # Generated ArUco markers (created at runtime)
+└── waypoint_marker/           # Waypoint control system
+    ├── waypoints_gui.py       # Click-to-send GUI
+    ├── ble_client.py          # BLE communication
+    ├── config.yaml            # Waypoint settings
+    └── test_ble_connection.py # Connection test
 ```
 
-## Features
+## Quick Start
 
-### ArUco Marker Detection
-- Real-time marker detection
-- Distance/depth estimation based on marker size
-- Multiple ArUco dictionary support (4x4, 5x5, 6x6, 7x7)
-- Marker ID display
-- Camera pose estimation (with calibration)
+### Installation
 
-### Image Processing Filters
-- Grayscale conversion
-- Edge detection (Canny)
-- Gaussian blur
-- Sharpen filter
-- Brightness/contrast adjustment
-- Binary threshold
-
-### Camera Support
-- DroidCam
-- IP Webcam
-- MJPEG/HTTP video stream
-- Built-in webcams
-
-## Setup
-
-### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Camera Calibration 
+**Dependencies:**
+- `opencv-python` - Camera processing
+- `numpy` - Numerical operations
+- `pyyaml` - Configuration files
+- `bleak` - BLE communication
+- `tkinter` - GUI (usually pre-installed)
 
-For precise distance estimation, calibrate camera with `utils/calibrate_focal_length.py`
+### Launch Commands
 
+```bash
+# Navigation only
+python3 launch.py --navigation
 
-## ArUco Depth Estimation
+# Waypoint GUI only
+python3 launch.py --waypoint
 
-### How It Works
+# Both systems together
+python3 launch.py --full
+```
 
-The distance to an ArUco marker is estimated using:
+Or manually:
+
+```bash
+# Camera navigation
+cd on_board_cam
+python3 navigation/unified_navigation.py
+
+# Waypoint control
+cd waypoint_marker
+python3 waypoints_gui.py
+```
+
+## Features
+
+### Camera Navigation (on_board_cam)
+
+- Real-time ArUco marker detection with distance estimation
+- Color-based object tracking
+- Autonomous navigation (approach/align to targets)
+- Switchable detectors (press 't' to toggle)
+- Manual override mode
+- Multiple image processing modes
+
+**Controls:**
+- `t` - Switch detector (ArUco ↔ Color)
+- `p` - Pause/Resume autonomous mode
+- `m` - Toggle manual override
+- `w`/`s` - Manual throttle forward/backward
+- `a`/`d` - Manual steering left/right
+- `space` - Emergency stop
+- `q` - Quit
+
+### Waypoint Control (waypoint_marker)
+
+- Visual workspace (180cm × 120cm)
+- Click-to-send waypoint coordinates
+- Real-time coordinate display
+- Simulation mode (works without robot)
+- BLE status monitoring
+
+**Usage:** Click anywhere on the canvas to send waypoint to robot.
+
+## Configuration
+
+### Camera Settings (on_board_cam/config.yaml)
+
+```yaml
+camera:
+  url: "http://10.22.231.72:4747/video"  # Your camera stream URL
+  buffer_size: 1                          # Low latency
+
+aruco:
+  dictionary_type: "DICT_6X6_250"
+  marker_size_cm: 15.8                    # Measured marker size
+  focal_length_px: 490.2                  # Camera focal length
+
+navigation:
+  target_distance_cm: 50.0    # Desired distance from marker
+  max_steering: 1.0           # Maximum steering angle
+  base_throttle: 0.6          # Forward speed
+```
+
+### Waypoint Settings (waypoint_marker/config.yaml)
+
+```yaml
+workspace:
+  max_x: 180.0  # Width in cm
+  max_y: 120.0  # Height in cm
+
+waypoint:
+  default_omega: 0.0              # Default rotation
+  coordinate_precision: 1         # Decimal places
+```
+
+### Camera URL Examples
+
+**IP Webcam (Android):**
+```yaml
+url: "http://<phone-ip>:4747/video"
+```
+
+**DroidCam:**
+```yaml
+url: "http://<phone-ip>:4747/mjpegfeed"
+```
+
+**ESP32-CAM:**
+```yaml
+url: "http://<esp-ip>/stream"
+```
+
+## Setup Guide
+
+### 1. Generate ArUco Markers
+
+```bash
+cd on_board_cam
+python3 utils/generate_aruco_markers.py
+```
+
+Print the generated `aruco_markers/printable_sheet.png`.
+
+### 2. Calibrate System
+
+**Measure marker size:**
+1. Measure printed marker width in cm
+2. Update `marker_size_cm` in `on_board_cam/config.yaml`
+
+**Calibrate focal length:**
+```bash
+cd on_board_cam
+python3 utils/calibrate_focal_length.py
+```
+
+**Calibrate color detection:**
+```bash
+cd on_board_cam
+python3 utils/calibrate_color_mask.py
+```
+
+### 3. Configure Camera
+
+Edit `on_board_cam/config.yaml` with your camera URL.
+
+### 4. Test Connection
+
+```bash
+cd waypoint_marker
+python3 test_ble_connection.py
+```
+
+## ROS2-Style Launch System
+
+The `launch.py` script provides process management:
+
+```bash
+# Available options
+python3 launch.py --navigation    # Navigation only
+python3 launch.py --waypoint      # Waypoint only  
+python3 launch.py --full          # Both systems
+```
+
+**Features:**
+- Launches multiple processes simultaneously
+- Graceful shutdown with Ctrl+C
+- Proper cleanup on exit
+- Process monitoring
+
+## BLE Communication
+
+**ESP32-C3 Robot:**
+- Device name: `BLE_Sensor_Hub`
+- Motor control via BLE characteristics
+- Waypoint setting (x, y, omega)
+- Sensor reading capabilities
+
+**Protocol:**
+- Values sent as byte arrays
+- Throttle/Steering: -1.0 to 1.0 (float)
+- Coordinates: cm values (float)
+
+Both programs work in simulation mode if ESP32 is not available.
+
+## ArUco Detection
+
+### Distance Calculation
 
 ```
-Distance = (Real_Marker_Size × Focal_Length) / Perceived_Marker_Size_in_Pixels
+Distance = (Real_Marker_Size × Focal_Length) / Perceived_Size_in_Pixels
 ```
 
-## Usage Examples
+### Dictionary Types
 
-### Basic ArUco Detection
+- `DICT_4X4_50` - Small markers, fewer IDs
+- `DICT_6X6_250` - Good balance (recommended)
+- `DICT_7X7_1000` - More IDs, larger markers
+
+### Marker Sizes
+
+- **Small (5-10cm):** Close range (<1m)
+- **Medium (10-20cm):** General purpose (1-3m)
+- **Large (20-50cm):** Long range (3-10m)
+
+## Troubleshooting
+
+### Camera Issues
+
+**Can't connect to camera:**
+- Check camera URL in config.yaml
+- Verify camera app is running
+- Test URL in web browser first
+- Check network connectivity
+
+**Low frame rate:**
+- Set `buffer_size: 1` in config
+- Lower camera app resolution
+- Use wired connection
+
+### BLE Issues
+
+**Can't connect to ESP32:**
+- Check ESP32 is powered on
+- Verify device name: `BLE_Sensor_Hub`
+- Enable Bluetooth on computer
+- Programs work in simulation mode without hardware
+
+**Commands not received:**
+- Verify ESP32 firmware is running
+- Test with `test_ble_connection.py`
+- Check Bluetooth connection quality
+
+### ArUco Detection Issues
+
+**Markers not detected:**
+- Check lighting (avoid shadows)
+- Ensure marker is flat with white border
+- Verify correct dictionary type in config
+- Try larger marker size
+
+**Inaccurate distance:**
+- Measure marker size accurately
+- Update `marker_size_cm` in config
+- Calibrate `focal_length_px`
+- Ensure marker is perpendicular to camera
+
+## Advanced Topics
+
+### Adding Custom Target Detectors
+
+1. Create detector class in `on_board_cam/navigation/target_detectors.py`
+2. Implement `detect()` method
+3. Register in `unified_navigation.py`
+4. Press 't' to cycle through detectors
+
+### Performance Optimization
+
+**Camera latency:**
 ```python
-from camera_processing import ArucoDetector
-import cv2
-
-# Initialize detector
-detector = ArucoDetector(
-    aruco_dict_type="DICT_6X6_250",
-    marker_size_cm=10.0,
-    focal_length_px=1000.0
-)
-
-# Capture frame
-cap = cv2.VideoCapture("http://10.22.209.148:4747/video")
-ret, frame = cap.read()
-
-# Detect markers
-corners, ids, rejected = detector.detect(frame)
-
-# Draw detections
-frame = detector.draw_detections(frame, corners, ids)
-
-# Get marker info
-markers_info = detector.get_marker_info(corners, ids)
-for marker in markers_info:
-    print(f"Marker {marker['id']}: {marker['distance_cm']:.1f}cm away")
+cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 ```
 
-### ArUco Dictionary Types:
-- `DICT_4X4_50` - Good for small markers, fewer IDs
-- `DICT_6X6_250` - Good balance
-- `DICT_7X7_1000` - More unique IDs, larger markers
+**Processing speed:**
+- Use grayscale instead of color
+- Lower resolution
+- Skip unnecessary processing
 
-### Marker Sizes:
-- **Small (5-10cm)**: Good for close range (< 1m)
-- **Medium (10-20cm)**: General purpose (1-3m)
-- **Large (20-50cm)**: Long range (3-10m)
+## File Locations
 
-## Performance Tips
+- Main launcher: `launch.py`
+- Camera config: `on_board_cam/config.yaml`
+- Waypoint config: `waypoint_marker/config.yaml`
+- Generated markers: `on_board_cam/aruco_markers/`
+- Utilities: `on_board_cam/utils/`
 
-1. **Lower latency**: Set buffer size to 1
-   ```python
-   cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-   ```
+## License
 
-2. **Better detection**: Use good lighting and avoid shadows
+Educational project for TE2004B course.
 
-3. **Faster processing**: Use grayscale instead of color
+---
 
-4. **Multiple markers**: Use unique IDs for each marker
+**Quick Reference:**
+```bash
+# Navigation
+python3 launch.py --navigation
+
+# Waypoint control
+python3 launch.py --waypoint
+
+# Both systems
+python3 launch.py --full
+```
 
 
