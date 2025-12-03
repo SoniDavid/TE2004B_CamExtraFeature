@@ -55,16 +55,19 @@ class ProcessNode:
         if self.env:
             process_env.update(self.env)
         
-        # Start process
+        # Ensure Python output is unbuffered
+        if 'python' in self.cmd[0].lower():
+            process_env['PYTHONUNBUFFERED'] = '1'
+        
+        # Start process - don't capture output, let it print directly
         print(f" Starting {self.name}...")
         self.process = subprocess.Popen(
             self.cmd,
             cwd=self.cwd,
             env=process_env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            bufsize=1
+            stdout=None,  # Let output go directly to terminal
+            stderr=None,  # Let errors go directly to terminal
+            universal_newlines=True
         )
         print(f"   PID: {self.process.pid}")
     
@@ -213,6 +216,23 @@ def launch_waypoint_with_dashboard():
     launcher.monitor_loop()
 
 
+def launch_unified_control():
+    """Launch unified control GUI V2 (Manual + Waypoint + ArUco + Color Navigation)."""
+    launcher = LaunchSystem()
+    
+    project_root = get_project_root()
+    
+    # Unified Control GUI V2 - Clean mode switching, matches working navigation
+    launcher.add_node(ProcessNode(
+        name="Unified Control GUI V2",
+        cmd=["python3", "unified_control_gui_v2.py"],
+        cwd=str(project_root / "waypoint_marker")
+    ))
+    
+    launcher.start_all()
+    launcher.monitor_loop()
+
+
 def launch_full_system():
     """Launch both: navigation + waypoint."""
     launcher = LaunchSystem()
@@ -247,10 +267,13 @@ Examples:
   %(prog)s --dashboard              # Dashboard only
   %(prog)s --navigation             # Unified Navigation only
   %(prog)s --waypoint               # Waypoint GUI only
-  %(prog)s --full                   # Navigation + Waypoint
+  %(prog)s --unified                # Unified Control GUI (All modes in one)
+  %(prog)s --full                   # Navigation + Waypoint (separate windows)
 
 Pre-configured launch options are provided for common use cases.
 For custom launches, modify this script or create a new launch file.
+
+RECOMMENDED: Use --unified for the best experience with all control modes (V2)!
         """
     )
     
@@ -261,6 +284,8 @@ For custom launches, modify this script or create a new launch file.
                       help='Launch unified navigation')
     group.add_argument('--waypoint', action='store_true',
                       help='Launch waypoint GUI')
+    group.add_argument('--unified', action='store_true',
+                      help='Launch unified control GUI V2 (Manual + Waypoint + ArUco + Color Navigation)')
     group.add_argument('--full', action='store_true',
                       help='Launch full system (navigation + waypoint)')
     
@@ -272,6 +297,8 @@ For custom launches, modify this script or create a new launch file.
         launch_navigation_with_dashboard()
     elif args.waypoint:
         launch_waypoint_with_dashboard()
+    elif args.unified:
+        launch_unified_control()
     elif args.full:
         launch_full_system()
 

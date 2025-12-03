@@ -40,11 +40,11 @@ class CarBLEClient:
         self._cached_char_values = {}
         self._cached_char_timestamps = {}
     
-    async def find_device(self):
+    async def find_device(self, timeout=3.0):
         if not BLEAK_AVAILABLE:
             return None
-        print(f"Scanning for {self.device_name}...")
-        devices = await BleakScanner.discover(timeout=10.0)
+        print(f"Scanning for {self.device_name}... (timeout: {timeout}s)")
+        devices = await BleakScanner.discover(timeout=timeout)
         device = next((d for d in devices if d.name == self.device_name), None)
         if not device:
             print(f"✗ Device not found")
@@ -85,7 +85,14 @@ class CarBLEClient:
         
         # SIMULATION MODE: If no client connected, just print
         if self.client is None:
-            print(f"  [SIM] Would send to {char_uuid[-1]}: {list(value_bytes)}")
+            char_name = {
+                "1": "LED",
+                "2": "Throttle",
+                "3": "Steering",
+                "4": "Omega",
+                "5": "Waypoint"
+            }.get(char_uuid[-1], "Unknown")
+            print(f"  [SIM] {char_name}: {list(value_bytes)}")
             return
         
         # Check value cache (compare bytes)
@@ -128,16 +135,25 @@ class CarBLEClient:
     async def set_throttle(self, throttle):
         """Set throttle (-1.0 to 1.0)"""
         mapped = to_byte(throttle)
+        if self.client is None:
+            print(f"  [SIM] Throttle: {throttle:+.2f} → byte {mapped}")
+            return
         await self.set_char(self.base_uuid + "2", mapped)
     
     async def set_steering(self, steering):
         """Set steering (-1.0 to 1.0)"""
         mapped = to_byte(steering)
+        if self.client is None:
+            print(f"  [SIM] Steering: {steering:+.2f} → byte {mapped}")
+            return
         await self.set_char(self.base_uuid + "3", mapped)
     
     async def set_omega(self, omega):
         """Set omega (-1.0 to 1.0)"""
         mapped = to_byte(omega)
+        if self.client is None:
+            print(f"  [SIM] Omega: {omega:+.2f} → byte {mapped}")
+            return
         await self.set_char(self.base_uuid + "4", mapped)
 
 async def control_loop():
