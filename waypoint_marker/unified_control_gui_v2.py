@@ -66,7 +66,8 @@ def load_scales():
 
 def to_byte(val):
     """Convert value from -1.0 to +1.0 to byte (0-255)."""
-    return int((val + 1) * 127.5)
+    result = int(val * 128.0 + 128.0)
+    return max(0, min(255, result))
 
 
 class UnifiedControlGUI:

@@ -3,16 +3,9 @@ BLE Keyboard/Gamepad Control - WASD or gamepad for throttle/steering, X for LED
 """
 
 import asyncio
+from bleak import BleakScanner, BleakClient
 from pathlib import Path
 import time
-
-# Try to import bleak, but allow simulation mode if not available
-try:
-    from bleak import BleakScanner, BleakClient
-    BLEAK_AVAILABLE = True
-except ImportError:
-    BLEAK_AVAILABLE = False
-    print("⚠ Warning: 'bleak' not installed. Running in SIMULATION MODE ONLY.")
 
 def load_scales():
     try:
@@ -25,7 +18,6 @@ def load_scales():
 
 def to_byte(val):
     # Convert -1.0 to +1.0 range to 0-255 byte
-    # Matches C toBipolar: (value - 128) / 128.0
     result = int(val * 128.0 + 128.0)
     return max(0, min(255, result))
 
@@ -40,11 +32,9 @@ class CarBLEClient:
         self._cached_char_values = {}
         self._cached_char_timestamps = {}
     
-    async def find_device(self, timeout=3.0):
-        if not BLEAK_AVAILABLE:
-            return None
-        print(f"Scanning for {self.device_name}... (timeout: {timeout}s)")
-        devices = await BleakScanner.discover(timeout=timeout)
+    async def find_device(self):
+        print(f"Scanning for {self.device_name}...")
+        devices = await BleakScanner.discover(timeout=10.0)
         device = next((d for d in devices if d.name == self.device_name), None)
         if not device:
             print(f"✗ Device not found")
@@ -55,10 +45,7 @@ class CarBLEClient:
     async def connect(self):
         self.device = await self.find_device()
         if not self.device:
-            if BLEAK_AVAILABLE:
-                print("⚠ Device not found - Running in SIMULATION MODE")
-            self.client = None  # Simulation mode
-            return
+            raise Exception("Device not found")
         
         print(f"Connecting...")
         self.client = BleakClient(self.device.address)
@@ -71,8 +58,6 @@ class CarBLEClient:
         if self.client:
             await self.client.disconnect()
             print("Disconnected.")
-        else:
-            print("Simulation ended.")
     
     async def set_char(self, char_uuid, value, force=False, min_interval=0.1):
         # Normalize value to bytes
@@ -82,18 +67,6 @@ class CarBLEClient:
             value_bytes = bytes(value)
         else:
             raise TypeError("value must be int, bytes, bytearray, or list")
-        
-        # SIMULATION MODE: If no client connected, just print
-        if self.client is None:
-            char_name = {
-                "1": "LED",
-                "2": "Throttle",
-                "3": "Steering",
-                "4": "Omega",
-                "5": "Waypoint"
-            }.get(char_uuid[-1], "Unknown")
-            print(f"  [SIM] {char_name}: {list(value_bytes)}")
-            return
         
         # Check value cache (compare bytes)
         if not force and self._cached_char_values.get(char_uuid) == value_bytes:
@@ -122,39 +95,40 @@ class CarBLEClient:
             y_mm & 0xFF, (y_mm >> 8) & 0xFF,
             omega_dec & 0xFF, (omega_dec >> 8) & 0xFF
         ]
-        
-        # Print waypoint info in simulation mode
-        if self.client is None:
-            print(f"  [SIM] Waypoint: X={x:.1f}cm, Y={y:.1f}cm, Ω={omega:.1f}°")
     
         await self.set_char(self.base_uuid + "5", data, force=True)
+        
+        # Clear control value caches to force mode switch on next control send
+        self._clear_control_cache()
 
     async def set_led(self, state):
         await self.set_char(self.base_uuid + "1", int(state))
     
-    async def set_throttle(self, throttle):
+    async def set_throttle(self, throttle, force_mode_switch=False):
         """Set throttle (-1.0 to 1.0)"""
         mapped = to_byte(throttle)
-        if self.client is None:
-            print(f"  [SIM] Throttle: {throttle:+.2f} → byte {mapped}")
-            return
-        await self.set_char(self.base_uuid + "2", mapped)
+        await self.set_char(self.base_uuid + "2", mapped, force=force_mode_switch)
     
-    async def set_steering(self, steering):
+    async def set_steering(self, steering, force_mode_switch=False):
         """Set steering (-1.0 to 1.0)"""
         mapped = to_byte(steering)
-        if self.client is None:
-            print(f"  [SIM] Steering: {steering:+.2f} → byte {mapped}")
-            return
-        await self.set_char(self.base_uuid + "3", mapped)
+        await self.set_char(self.base_uuid + "3", mapped, force=force_mode_switch)
     
-    async def set_omega(self, omega):
+    async def set_omega(self, omega, force_mode_switch=False):
         """Set omega (-1.0 to 1.0)"""
         mapped = to_byte(omega)
-        if self.client is None:
-            print(f"  [SIM] Omega: {omega:+.2f} → byte {mapped}")
-            return
-        await self.set_char(self.base_uuid + "4", mapped)
+        await self.set_char(self.base_uuid + "4", mapped, force=force_mode_switch)
+    
+    def _clear_control_cache(self):
+        """Clear cached control values to force next control send (for mode switching)"""
+        control_uuids = [
+            self.base_uuid + "2",  # throttle
+            self.base_uuid + "3",  # steering
+            self.base_uuid + "4"   # omega
+        ]
+        for uuid in control_uuids:
+            self._cached_char_values.pop(uuid, None)
+            self._cached_char_timestamps.pop(uuid, None)
 
 async def control_loop():
     import combined_input as inp
@@ -187,19 +161,9 @@ async def control_loop():
     finally:
         await car.disconnect()
 
-async def debug_loop():
-    car = CarBLEClient()
-    await car.connect()
-    
-    try:
-        pass # Set a breakpoint here to debug
-    finally:
-        await car.disconnect()
-
 if __name__ == "__main__":
     try:
-       # asyncio.run(control_loop())
-         asyncio.run(debug_loop())
+        asyncio.run(control_loop())
     except KeyboardInterrupt:
         print("Interrupted")
     except Exception as e:

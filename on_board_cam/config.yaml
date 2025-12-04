@@ -38,7 +38,7 @@ navigation:
   # Target distance to maintain from ArUco marker (in cm)
 
   # Increased for narrow FOV to keep marker visible
-  target_distance_cm: 50.0
+  target_distance_cm: 40.0
   
   # Distance tolerance (stop if within this range of target)
   distance_tolerance_cm: 3.0
@@ -55,7 +55,7 @@ navigation:
   
   # Backward throttle multiplier (when too close)
   # e.g., 0.8 means backward at 80% of base_throttle
-  backward_throttle_multiplier: 0.8
+  backward_throttle_multiplier: 1.0
   
   # Frame center tolerance for alignment (in pixels)
   frame_center_tolerance: 50
